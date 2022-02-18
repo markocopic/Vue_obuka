@@ -1,23 +1,39 @@
 <template>
-  <div id="app">
+  <div id="main">
     <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <h1>{{title}}</h1>
+    <!-- <button @click="title = 'DRUGI NAZIV'">Change Title</button> -->
+    <button @click="changeNumber('minus')">-</button><br>
+    <h3>{{number}}</h3>
+    <button @click="changeNumber('plus')">+</button>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
+  data(){
+    return{
+      title: 'VUE OBUKA',
+      number: 0
+    }
+  },
+  methods:{
+    changeNumber(operation){
+      if (operation == 'plus') {
+        this.number = this.number + 1
+      } else if(operation == 'minus') {
+        this.number = this.number - 1
+      }
+      console.log(this.number)
+
+    }
   }
 }
 </script>
 
 <style>
-#app {
+#main {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
