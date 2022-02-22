@@ -1,13 +1,38 @@
 <template>
   <div id="main">
     <img alt="Vue logo" src="./assets/logo.png">
-    <!-- <h1 v-if="show">{{title}}</h1>
-    <ul>
-      <li v-for="(name,index) in names" :key="index"> {{name}}
-        <span @click="removeName(index)" class="red-x">X</span>
-      </li>
+     <h1>{{title}}</h1>
+<!-- 
+    <h3>Volume: {{volume}}</h3>
+    <button @click="volume--">Decrease</button>
+    <button @click="volume++">Increase</button> -->
+
+
+
+     <!-- <p @click="showRed = !showRed"
+      class="red-x"
+      :class="{'bg-red':showRed,'nova-klasa':nova}"> Petar Petrovic </p> -->
+
+<!-- 
+    <span>First name</span><input v-model="firstName" type="text"><br>
+    <span>Last name</span><input v-model="lastName" type="text"><br>
+
+    <p>{{ username }}</p> -->
+
+
+      <!-- <button @click="a++">Add to A</button>
+      <button @click="b++">Add to B</button>
+
+     <p>Age + a = {{ addToA }}</p>
+     <p>Age + b = {{ addToB }}</p> -->
+    <!-- <ul>
+      <li v-for="(name,index) in names" :key="index" 
+      @click="name.showRed = !name.showRed"
+       :class="{'bg-red':name.showRed}"> {{name.name}} -->
+         <!-- <span @click="removeName(index)" class="red-x">X</span> -->
+      <!-- </li>
     </ul>
-    <input @keyup.enter="addName()" v-model="inputName" type="text"> -->
+    <input v-if="listFull" @keyup.enter="addName()" v-model="inputName" type="text">   -->
     <!-- <button @click="addName()">Add Name</button> -->
     <!-- <br>
     <small style="color:red;" v-if="emptyValue">Empty value !!!</small> -->
@@ -31,7 +56,7 @@
     <div class="area" @mousemove="getCoo($event)" @mouseleave="resetCoo()">
       <p>{{x}}, {{y}}</p>
     </div> -->
-<br>
+<!-- <br>
     <input type="checkbox" name="Milos" id="milos" value="Milos" v-model="names">
     <label for="milos">Milos</label>
     <br>
@@ -41,7 +66,25 @@
     <input type="checkbox" name="Goran" id="goran" value="Goran" v-model="names">
     <label for="goran">Goran</label>
     <br>
-    <span>Names: {{names}}</span>
+    <span>Names: {{names}}</span> -->
+
+  <!-- <select v-model="selected">
+    <option v-for="option in options" 
+    :value="option"
+    :key="option.value">
+      {{option.text}}
+    </option>
+  </select>
+  <p>{{ selected }}</p> -->
+
+  <button @click="getData()">Get data from service</button>
+
+  <ul>
+    <li v-for="user in users" :key="user.id">
+      {{user.name}} , {{user.address.street}} - {{user.address.suite}}
+
+    </li>
+  </ul>
 
 
 
@@ -49,10 +92,16 @@
 </template>
 
 <script>
+import axios from 'axios'
 
 export default {
   data(){
     return{
+      volume:0,
+      showRed:true,
+      age:20,
+      a:0,
+      b:0,
       title: 'VUE OBUKA',
       number: 0,
       name:'Mirko',
@@ -60,15 +109,67 @@ export default {
       picked:'Two',
       x:0,
       y:0,
-      show:true,
-      names:[],
+      // names:[
+      //   {name:'Goran', showRed:false},
+      //   {name:'Zoran', showRed:false},
+      //   {name:'Petar', showRed:false},
+      //   {name:'Jovan', showRed:false}
+      //   ],
       inputName:'',
-      emptyValue:false
+      emptyValue:false,
+      selected:'',
+      options:[
+        {value:1, text:'Jedan'},
+        {value:2, text:'Dva'},
+        {value:3, text:'Tri'}
+      ],
+      firstName:'',
+      lastName:'',
+      users:[]
+    }
+  },
+  watch:{
+    volume(newVal,oldVal){
+      if (newVal == 8 && oldVal<newVal) {
+        alert('Too loud !!!')
+      }
+    }
+  },
+  computed:{
+    listFull(){
+      if (this.names.lenght > 4) {
+        return false
+      } else {
+        return true
+      }
+    },
+    username(){
+      if (this.firstName && this.lastName) {
+      return this.firstName.toUpperCase() +'.'+ this.lastName.toUpperCase()
+      } else {
+        return ''
+      }
+    },
+    addToA(){
+      console.log('Calculate A');
+      return this.age + this.a
+    },
+    addToB(){
+      console.log('Calculate B');
+      return this.age + this.b
     }
   },
   methods:{
-    removeName(index){
-      this.names.splice(index,1)
+    getData(){
+      axios.get('https://jsonplaceholder.typicode.com/users').then(
+        response=>{
+          console.log(response.data);
+          this.users = response.data
+        }
+      )
+    },
+    removeName(i){
+      this.names.splice(i,1)
     },
     addName(){
       if (this.inputName) {
@@ -123,5 +224,8 @@ export default {
 .red-x{
   cursor: pointer;
   color:red;
+}
+.bg-red{
+  background-color: red;;
 }
 </style>
