@@ -1,49 +1,31 @@
 <template>
   <div id="main">
 
-    <div v-if="showModal" class="edit-modal">
-      <input v-model="singlePost.title" type="text"><br>
-      <textarea v-model="singlePost.body" name="" id="" cols="50" rows="10"></textarea><br>
-      <button @click="closeModal()">cancel</button>
-      <button @click="updatePost()">save</button>
-
+    <div v-if="!logged" class="login">
+      <span>Username: </span>
+      <input :class="{'red':noUsername}" v-model="username" type="text"><br>
+      <span>Password: </span>
+      <input :class="{'red':noPassword}" v-model="password" type="password"><br>
+      <button @click="login">Login</button>
     </div>
 
-    <div class="filters">
-      <select name="" id="" v-model="userId">
-        <option v-for="user in users" :value="user.id" :key="user.id">
-          {{user.name}}
-        </option>
-      </select>
-      
-      <button @click="createPost()">Create Post</button>
-    </div>
-
-    <div class="posts-region">
-      <div @click="selectPost(post)" v-for="post in posts" :key="post.id">
-        <h3>{{post.title}}</h3>
-        <p>{{post.body}}</p>
-        <button @click="editPost(post)">edit</button>
-        <button @click="deletePost(post)">delete</button>
+    <div v-else>
+      <div>
+        <h3>Classes:</h3>
+        <select name="" id="" v-model="idClass">
+          <option v-for="cls in classes" :value="cls.id" :key="cls.id">{{cls.name}}</option>
+        </select>
       </div>
-    </div>
 
-    <div class="single-post">
-     <h2>Post info:</h2>
-     <hr>
-     <h3>{{singlePost.title}}</h3>
-     <p>{{singlePost.body}}</p>
-     <hr>
-     <h4>Comments:</h4>
-     <ul>
-       <li v-for="comment in comments" :key="comment.id"> 
-        <p> {{comment.name}}</p>
-        <span>{{comment.body}}</span><br>
-        <small>email: {{comment.email}}</small>
-        <hr>
-      </li>
-     </ul>
-    </div>
+      <div v-if="classSelected">
+        <h3>Subclasses:</h3>
+        <select name="" id="">
+          <option v-for="cls in subclasses" :value="cls.id" :key="cls.id">{{cls.name}}</option>
+        </select>
+      </div>
+      
+
+    </div>  
 
   </div>
 </template>
@@ -54,119 +36,74 @@
 export default {
   data(){
     return{
-      title: 'VUE OBUKA',
-      userId:1,
-      posts:[],
-      users:[],
-      comments:[],
-      singlePost:{},
-      showModal:false,
-      newPost:false
+     username:'',
+     password:'',
+     noUsername:false,
+     noPassword:false,
+     logged:false,
+     classes:[],
+     idClass:null,
+     classSelected:false,
+     subclasses:[]
     }
   },
   mounted(){
-    this.getData()
-    this.getUsers()
+    
   },
   watch:{
-    userId(){
-      this.getData()
+    idClass(newVal){
+      if (newVal) {
+        
+        this.getClasses(newVal)
+      }
     }
   },
   computed:{
   },
   methods:{
-    createPost(){
-      this.showModal = true
-      this.newPost = true
-    },
-    updatePost(){
-      console.log(this.selectPost);
-      if (this.newPost) {
-        axios.post('https://jsonplaceholder.typicode.com/posts',{
-          title: this.singlePost.title,
-          body: this.singlePost.body,
-          userId: this.userId,
+    login(){
+      if (!this.username) {
+        this.noUsername = true
+      } else if(!this.password){
+        this.noPassword = true
+
+      }
+      else {
+        this.noUsername = false
+        this.noPassword = false
+        axios.post('http://fd2c1-d.eps.local:8080/fadoc/eps_dev/vue_els_demo/login',{
+          username:this.username,
+          password:this.password
         }).then(res=>{
           console.log(res.data);
-          this.newPost = false
-          this.showModal = false
-          this.singlePost = {}
-          alert('Post created')
-        })
-      } else {
-        axios.put('https://jsonplaceholder.typicode.com/posts/'+this.singlePost.id,this.singlePost)
-        .then(res=>{
-          console.log(res.data)
-          this.showModal = false
-          this.singlePost = {}
-          alert('Post updated')
+          if (res.data.Success) {
+            this.logged = true
+            localStorage.setItem('token',res.data.Token)
+            this.getClasses(null)
+          }
         })
       }
-      
     },
-    closeModal(){
-      this.showModal = false
-    },
-    deletePost(post){
-      axios.delete('https://jsonplaceholder.typicode.com/posts/'+post.id)
-      .then(res=>{
-        console.log(res.data);
+    getClasses(idClass){
+      axios.get('http://fd2c1-d.eps.local:8080/fadoc/eps_dev/vue_els_demo/class',{
+        params:{
+          id_class:idClass
+        },
+        headers:{
+          'custom-header':'vrednost',
+          'Authorization':'Bearer ' + localStorage.getItem('token')
+        }
       })
-    },
-    editPost(){
-      this.showModal = true
-    },
-    getComments(){
-      axios.get('https://jsonplaceholder.typicode.com/comments',{
-        params:{
-          postId: this.singlePost.id
+      .then(res=>{
+        if (idClass) {
+          this.subclasses = res.data.classes
+          this.classSelected = true
+        } else {
+          this.classes = res.data.classes
+          this.classSelected = false
         }
-      }).then(
-        res=>{
-          this.comments = res.data
-          console.log(this.comments);
-        }
-      )
-    },
-    selectPost(post){
-      this.singlePost = post
-      this.getComments()
-    },
-    getUsers(){
-      axios.get('https://jsonplaceholder.typicode.com/users',{
-        params:{
-        }
-      }).then(
-        res=>{
-          this.users = res.data
-          console.log(this.users);
-
-        }
-      )
-    },
-    getData(){
-      this.posts = []
-      axios.get('https://jsonplaceholder.typicode.com/posts',{
-        params:{
-          userId:this.userId
-        }
-      }).then(
-        res=>{
-          this.posts = res.data
-          console.log(res);
-
-        }
-      )
-      // .catch(e=>{
-      //   if (e.response.status == 404) {
-      //     console.log(e.response.status);
-      //   } else {
-      //     console.log(e);
-          
-      //   }
-      //   alert('Serevr error')
-      // })
+        
+      })
     }
   }
 }
@@ -181,30 +118,17 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
-.post{
-  border: 1px solid grey;
-  margin: 20px;
-  cursor: pointer;
+.login{
+  width:30%;
+  margin: 20px auto;
+  background-color: lightcyan;
+  border: 1px solid blue;
 }
-.posts-region{
-  max-height: 40vh;
-  overflow: auto;
-  border: 1px solid grey;
-  margin-top: 10px;
+span, input, button{
+  margin: 5px;
+  padding: 3px;
 }
-.single-post{
-  max-height: 40vh;
-  border: 1px solid grey;
-  margin-top:20px;
-  overflow: auto;
-
-}
-.edit-modal{
-  position: absolute;
-  top: 30%;
-  left:30%;
-  z-index: 1000;
-  background-color: lightgrey;
-  padding: 20px;
+.red{
+  border:1px solid red;
 }
 </style>
